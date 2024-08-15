@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { getAllPosts, deletePost, updatePost } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useContext, useEffect, useState } from "react"
+import { getAllPosts, deletePost, updatePost } from "../services/api";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../contexts/AuthContext";
 
 function PostList() {
   const [posts, setPosts] = useState([])
@@ -8,6 +9,7 @@ function PostList() {
   const [updateTitle, setUpdateTitle] = useState("")
   const [updateContent, setUpdateContent] = useState("")
   const [search, setSearch] = useState("")
+  const { userId, logout } = useContext(AuthContext)
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,22 +48,31 @@ function PostList() {
     post.content.toLowerCase().includes(search.toLowerCase())
   );
   
+  const handleLogout = async () => {
+    await logout()
+    navigate("/login")
+  }
 
   return (
     <>
-      <div className="row mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Posts</h1>
+        <button className="btn btn-outline-danger" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
+      <div className="row mb-4">
         <div className="col">
-            <input 
-              type="text" 
-              placeholder="Search by title or content" 
-              value={search} 
-              onChange={(e) => setSearch(e.target.value)} 
-              className="form-control" 
-            />
+          <input 
+            type="text" 
+            placeholder="Search by title or content" 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)} 
+            className="form-control" 
+          />
         </div>
-        <div className="col">
-          <button  className="btn btn-success" onClick={() => navigate('/create-post')}>
+        <div className="col text-end">
+          <button className="btn btn-success" onClick={() => navigate("/create-post")}>
             + Add Post
           </button>
         </div>
@@ -70,7 +81,7 @@ function PostList() {
         {filteredPosts.map((post) => (
           <div key={post.id} className="col-md-4 mb-3">
             <div className="card">
-              <img src={post.image} className="card-img-top" alt={post.title} style={{ height: '200px', objectFit: 'cover' }} />
+              <img src={post.image} className="card-img-top" alt={post.title} style={{ height: "200px", objectFit: "cover" }} />
               <div className="card-body">
                 
                 {editing === post.id ? 
@@ -86,10 +97,10 @@ function PostList() {
                       value={updateContent}
                       onChange={(e) => setUpdateContent(e.target.value)}
                     />          
-                    <button  className="btn btn-success" onClick={() => handleUpdate(post.id)}>
+                    <button className="btn btn-success" onClick={() => handleUpdate(post.id)}>
                       Save
                     </button>
-                    <button  className="btn btn-secondary ms-2" onClick={() => setEditing(null)}>
+                    <button className="btn btn-secondary ms-2" onClick={() => setEditing(null)}>
                       Cancel
                     </button>
                   </>
@@ -97,12 +108,16 @@ function PostList() {
                   <>
                     <h5 className="card-title">{post.title}</h5>
                     <p className="card-text">{post.content}</p>
-                    <button className="btn btn-danger" onClick={() => handleDelete(post.id)}>
-                      Delete
-                    </button>
-                    <button className="btn btn-primary ms-2" onClick={() => handleEdit(post)}>
-                      Edit
-                    </button>
+                    { userId === post.user_id &&
+                    <>
+                      <button className="btn btn-danger" onClick={() => handleDelete(post.id)}>
+                        Delete
+                      </button>
+                      <button className="btn btn-primary ms-2" onClick={() => handleEdit(post)}>
+                        Edit
+                      </button>
+                    </>
+                  }
                   </>
                )}
               </div>
